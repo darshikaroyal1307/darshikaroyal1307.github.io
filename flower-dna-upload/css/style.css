@@ -1,0 +1,206 @@
+:root {
+  --bg: #0e0f12;
+  --panel: #16181d;
+  --line: #262a31;
+  --line-strong: #3a4049;
+  --fg: #eceef2;
+  --fg-dim: #9aa1ad;
+  --fg-mute: #6b7280;
+  --accent: #8fd6b4;
+  --radius: 8px;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
+}
+
+:root[data-theme="light"] {
+  --bg: #faf9f6;
+  --panel: #ffffff;
+  --line: #e6e3dc;
+  --line-strong: #cfcbc2;
+  --fg: #1d1e21;
+  --fg-dim: #5e6169;
+  --fg-mute: #8b8f98;
+  --accent: #1d7a55;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 28px 20px 64px;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+h1 {
+  font-size: 19px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.tag {
+  font-size: 13px;
+  color: var(--fg-mute);
+}
+
+header nav {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+a { color: var(--fg-dim); }
+header nav a, .theme {
+  font-size: 13px;
+  color: var(--fg-dim);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+header nav a:hover, .theme:hover { color: var(--fg); }
+
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+label.lab { font-size: 13px; color: var(--fg-dim); }
+
+input[type="text"] {
+  font-family: var(--mono);
+  font-size: 14px;
+  width: 190px;
+  height: 34px;
+  padding: 0 10px;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  outline: none;
+}
+input[type="text"]:focus { border-color: var(--line-strong); }
+
+button.btn {
+  height: 34px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+button.btn:hover { border-color: var(--line-strong); }
+button.btn:active { transform: scale(0.98); }
+button.btn.primary { border-color: var(--line-strong); }
+button.btn.on { border-color: var(--accent); color: var(--accent); }
+
+.err { font-size: 13px; color: #e2726f; min-height: 1em; }
+
+.stage {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  line-height: 0;
+}
+canvas { display: block; width: 100%; height: auto; }
+
+.readout {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin: 12px 0 4px;
+  font-size: 13px;
+  color: var(--fg-dim);
+}
+.readout code {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  color: var(--fg);
+  word-break: break-all;
+}
+
+.genes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.gene {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 9px 11px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  transition: border-color 0.15s ease;
+}
+.gene:hover { border-color: var(--line-strong); }
+.gene.changed { border-color: var(--accent); }
+
+.gene .bits {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+}
+.gene .name { font-size: 12px; color: var(--fg-mute); margin-top: 3px; }
+.gene .val { font-size: 13px; color: var(--fg); }
+
+.note { font-size: 13px; color: var(--fg-mute); margin-top: 18px; }
+
+.garden {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+.cell {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  line-height: 0;
+}
+.cell:hover { border-color: var(--line-strong); }
+.cell .seed {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 22px;
+  color: var(--fg-mute);
+  border-top: 1px solid var(--line);
+}

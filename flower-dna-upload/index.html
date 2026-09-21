@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Flower DNA</title>
+<meta name="description" content="Every flower is one 32-bit number. Type a seed and watch it grow." />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Flower DNA</h1>
+    <span class="tag">every flower is one 32-bit number</span>
+    <nav>
+      <a href="garden.html">garden</a>
+      <button class="theme" id="theme" type="button">light</button>
+    </nav>
+  </header>
+
+  <div class="controls">
+    <label class="lab" for="seed">Seed</label>
+    <input id="seed" type="text" inputmode="numeric" value="17" autocomplete="off" spellcheck="false" />
+    <button class="btn primary" id="grow" type="button">Grow</button>
+    <button class="btn" id="random" type="button">Random</button>
+    <button class="btn" id="mutate" type="button">Mutate</button>
+    <button class="btn" id="breed" type="button">Breed</button>
+    <button class="btn" id="copy" type="button">Copy link</button>
+    <button class="btn" id="png" type="button">PNG</button>
+  </div>
+  <div class="controls" id="species-row">
+    <span class="lab">Species</span>
+  </div>
+  <p class="err" id="err"></p>
+
+  <div class="stage"><canvas id="canvas" width="1040" height="720"></canvas></div>
+
+  <p class="readout">
+    <span id="summary"></span>
+    <code id="binary"></code>
+  </p>
+
+  <div class="genes" id="genes"></div>
+
+  <p class="note">Each tile is one gene. Click a tile to flip a bit inside it, and the seed
+  updates to the number that produces the new flower. The species buttons rewrite only
+  bits 0 and 1, so the rest of the DNA carries over. A seed can also be a word.</p>
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

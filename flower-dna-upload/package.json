@@ -1,0 +1,11 @@
+{
+  "name": "flower-dna",
+  "version": "1.0.0",
+  "description": "Every flower is one 32-bit number. Generative plants from L-systems and phyllotaxis.",
+  "scripts": {
+    "start": "node serve.js"
+  },
+  "license": "MIT",
+  "private": true,
+  "type": "module"
+}
