@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Flower DNA, garden</title>
+<style>
+:root {
+  --bg: #0e0f12;
+  --panel: #16181d;
+  --line: #262a31;
+  --line-strong: #3a4049;
+  --fg: #eceef2;
+  --fg-dim: #9aa1ad;
+  --fg-mute: #6b7280;
+  --accent: #8fd6b4;
+  --radius: 8px;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
+}
+
+:root[data-theme="light"] {
+  --bg: #faf9f6;
+  --panel: #ffffff;
+  --line: #e6e3dc;
+  --line-strong: #cfcbc2;
+  --fg: #1d1e21;
+  --fg-dim: #5e6169;
+  --fg-mute: #8b8f98;
+  --accent: #1d7a55;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 28px 20px 64px;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+h1 {
+  font-size: 19px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.tag {
+  font-size: 13px;
+  color: var(--fg-mute);
+}
+
+header nav {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+a { color: var(--fg-dim); }
+header nav a, .theme {
+  font-size: 13px;
+  color: var(--fg-dim);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+header nav a:hover, .theme:hover { color: var(--fg); }
+
+.controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+label.lab { font-size: 13px; color: var(--fg-dim); }
+
+input[type="text"] {
+  font-family: var(--mono);
+  font-size: 14px;
+  width: 190px;
+  height: 34px;
+  padding: 0 10px;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  outline: none;
+}
+input[type="text"]:focus { border-color: var(--line-strong); }
+
+button.btn {
+  height: 34px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+button.btn:hover { border-color: var(--line-strong); }
+button.btn:active { transform: scale(0.98); }
+button.btn.primary { border-color: var(--line-strong); }
+button.btn.on { border-color: var(--accent); color: var(--accent); }
+
+.err { font-size: 13px; color: #e2726f; min-height: 1em; }
+
+.stage {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  line-height: 0;
+}
+canvas { display: block; width: 100%; height: auto; }
+
+.readout {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin: 12px 0 4px;
+  font-size: 13px;
+  color: var(--fg-dim);
+}
+.readout code {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  color: var(--fg);
+  word-break: break-all;
+}
+
+.genes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.gene {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 9px 11px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  transition: border-color 0.15s ease;
+}
+.gene:hover { border-color: var(--line-strong); }
+.gene.changed { border-color: var(--accent); }
+
+.gene .bits {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+}
+.gene .name { font-size: 12px; color: var(--fg-mute); margin-top: 3px; }
+.gene .val { font-size: 13px; color: var(--fg); }
+
+.note { font-size: 13px; color: var(--fg-mute); margin-top: 18px; }
+
+.garden {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+.cell {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  line-height: 0;
+}
+.cell:hover { border-color: var(--line-strong); }
+.cell .seed {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 22px;
+  color: var(--fg-mute);
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 600px) {
+  .wrap { padding: 18px 14px 48px; }
+  h1 { font-size: 17px; }
+  .tag { display: none; }
+  header nav { margin-left: 0; width: 100%; }
+  .controls { gap: 6px; }
+  input[type="text"] { width: 100%; }
+  button.btn { flex: 1 1 auto; min-width: 84px; padding: 0 8px; }
+  label.lab { width: 100%; }
+  .genes { grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 6px; }
+  .readout code { font-size: 10px; letter-spacing: 0.4px; }
+}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Garden</h1>
+    <span class="tag" id="range"></span>
+    <nav>
+      <a href="index.html">back</a>
+      <button class="theme" id="prev" type="button">prev</button>
+      <button class="theme" id="next" type="button">next</button>
+    </nav>
+  </header>
+  <div class="garden" id="garden"></div>
+  <p class="note">Consecutive seeds, so neighbouring numbers are not neighbouring flowers.
+  The hash scatters them on purpose. Click one to open it.</p>
+</div>
+<script>
+// Invertible 32-bit bijection (the MurmurHash3 finalizer and its exact inverse).
+// Every seed maps to one genome, and every genome maps back to one seed.
+// That two-way property is what lets a mutated genome be reported as a real seed.
+
+function toGenome(seed) {
+  let n = seed >>> 0;
+  n ^= n >>> 16;
+  n = Math.imul(n, 0x85ebca6b) >>> 0;
+  n ^= n >>> 13;
+  n = Math.imul(n, 0xc2b2ae35) >>> 0;
+  n ^= n >>> 16;
+  return n >>> 0;
+}
+
+function toSeed(genome) {
+  let h = genome >>> 0;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x7ed1b41d) >>> 0;
+  h ^= (h >>> 13) ^ (h >>> 26);
+  h = Math.imul(h, 0xa5cb9243) >>> 0;
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+// FNV-1a, so a name or a word can be used as a seed instead of a number.
+function textToSeed(text) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+
+// Deterministic PRNG for placement jitter. Never Math.random in the draw path,
+// or the same seed would grow a different plant on every reload.
+function mulberry32(a) {
+  let t = a >>> 0;
+  return function () {
+    t = (t + 0x6d2b79f5) >>> 0;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+
+// Four growth archetypes. The species gene picks one, and the form gene picks a
+// production rule inside it. A species does not add new genes: it changes how the
+// turtle and the palette read the ones that are already there.
+//
+//   len       first segment length           decay     length factor per branch level
+//   width     first stroke width             taper     width factor per branch level
+//   angle     turn for + and -               bloom     bloom radius multiplier
+//   droop     downward tropism on a raceme   coreRatio seed head size inside a bloom
+//   petals    petal counts this species uses, or null for the shared table
+//   hueArc    [start, span] arc of the colour wheel the 6-bit hue gene maps onto
+//   coreMode  'offset' rotates the core away from the petals, 'absolute' pins it
+//   coreHues  the four values the core tint gene chooses between
+
+const SPECIES = [
+  {
+    name: 'daisy',
+    formLabels: ['1 bloom', '2 blooms', '3 blooms', '5 blooms'],
+    forms: [
+      { axiom: 'FFFFFFA', rule: null,                                  depth: 0, bloom: 1.00 },
+      { axiom: 'FFFFA',   rule: 'F[+FFFA]FFA',                         depth: 1, bloom: 0.78 },
+      { axiom: 'FFFFA',   rule: 'F[+FFFA]F[-FFFA]FA',                  depth: 1, bloom: 0.68 },
+      { axiom: 'FFFA',    rule: 'F[++FFFA][--FFFA]FF[+FFA][-FFA]FA',   depth: 1, bloom: 0.52 }
+    ],
+    len: 58, width: 7.5, angle: 0.46, decay: 0.78, taper: 0.62, droop: 0,
+    stem: 'hsl(122, 32%, 34%)', leafHue: 124, leafScale: 1.0, leafMult: 1, leafDepth: 0,
+    coreRatio: 0.30, petals: null, widthFloor: 0, tipCap: 1,
+    // The wildflower keeps the whole wheel. Everything else is held to its own arc.
+    hueArc: [0, 359], coreMode: 'offset', coreHues: [150, 182, 205, 32]
+  },
+
+  {
+    name: 'cherry',
+    formLabels: ['young twig', 'full spray', 'leaning spray', 'old branch'],
+    forms: [
+      { axiom: 'FFA', rule: 'F[+FA][-FA]FA',      depth: 2, bloom: 0.34 },
+      { axiom: 'FFA', rule: 'F[+FA][-FA]FA',      depth: 3, bloom: 0.24 },
+      { axiom: 'FFA', rule: 'F[++FA][-FA]FA',     depth: 3, bloom: 0.22 },
+      { axiom: 'FA',  rule: 'FF[+FA][-FA]F[+FA]A', depth: 3, bloom: 0.19 }
+    ],
+    len: 66, width: 10, angle: 0.44, decay: 0.70, taper: 0.56, droop: 0,
+    stem: 'hsl(20, 22%, 33%)', leafHue: 118, leafScale: 0.5, leafMult: 3, leafDepth: 2,
+    coreRatio: 0.20, petals: [5, 5, 8, 5], widthFloor: 0.62, tipCap: 0.35,
+    // Magenta through rose to pale blush, with gold stamens. The arc stops at 346
+    // and never reaches red: a blossom at 356 draws a vermilion star, not a flower.
+    hueArc: [316, 30], coreMode: 'absolute', coreHues: [50, 43, 56, 37]
+  },
+
+  {
+    name: 'wisteria',
+    formLabels: ['two racemes', 'four racemes', 'six racemes', 'full cascade'],
+    forms: [
+      { axiom: 'FFFFFA', rule: 'F[+W]FF[-W]FA',          depth: 1, chain: 10, bloom: 0.17 },
+      { axiom: 'FFFFA',  rule: 'F[+W]FF[-W]FA',          depth: 2, chain: 12, bloom: 0.15 },
+      { axiom: 'FFFFA',  rule: 'F[+W]F[-W]F[+W]FA',      depth: 2, chain: 13, bloom: 0.14 },
+      { axiom: 'FFFA',   rule: 'F[+W][-W]FF[+W][-W]FA',  depth: 2, chain: 15, bloom: 0.12 }
+    ],
+    len: 60, width: 8, angle: 0.74, decay: 0.76, taper: 0.60, droop: 0.42,
+    stem: 'hsl(96, 26%, 32%)', leafHue: 112, leafScale: 0.7, leafMult: 2, leafDepth: 1,
+    coreRatio: 0.18, petals: [5, 5, 5, 8], widthFloor: 0.58, tipCap: 0.40,
+    // Blue-violet through lilac to mauve, each floret with a pale yellow eye.
+    hueArc: [238, 66], coreMode: 'absolute', coreHues: [48, 54, 43, 58]
+  },
+
+  {
+    name: 'sunflower',
+    formLabels: ['tall', 'giant', 'two heads', 'three heads'],
+    forms: [
+      { axiom: 'FFFFFFFFA', rule: null,                          depth: 0, bloom: 1.45 },
+      { axiom: 'FFFFFFFA',  rule: null,                          depth: 0, bloom: 1.65 },
+      { axiom: 'FFFFFFA',   rule: 'F[+FFFFFFFA]FFFA',            depth: 1, bloom: 0.72 },
+      { axiom: 'FFFFFFFA',  rule: 'F[+FFFFFFA]F[-FFFFFFA]FFA',   depth: 1, bloom: 0.56 }
+    ],
+    len: 56, width: 12, angle: 0.40, decay: 0.82, taper: 0.70, droop: 0,
+    stem: 'hsl(104, 30%, 31%)', leafHue: 108, leafScale: 1.55, leafMult: 1, leafDepth: 0,
+    coreRatio: 0.46, petals: [13, 21, 21, 34], widthFloor: 0, tipCap: 1,
+    // Rust and amber through gold to lemon, over the dark brown seed head.
+    hueArc: [16, 48], coreMode: 'absolute', coreHues: [28, 22, 33, 18]
+  }
+];
+
+
+
+// The 32 bits of a genome, sliced into thirteen genes.
+// Bit ranges are contiguous and cover the word exactly, so no bit is inert:
+// flipping any one of the 32 changes exactly one visible trait.
+//
+// decode() and format() both receive the traits decoded so far. The species gene
+// sits at bit 0 and is therefore always resolved first, which is what lets the
+// later genes read themselves differently per species.
+
+const mod360 = v => ((v % 360) + 360) % 360;
+
+const GENES = [
+  { key: 'species', bit: 0,  bits: 2, label: 'species',
+    decode: v => v,
+    format: v => SPECIES[v].name },
+
+  { key: 'form',    bit: 2,  bits: 2, label: 'form',
+    decode: v => v,
+    format: (v, t) => SPECIES[t.species].formLabels[v] },
+
+  // The gene still spans all 64 of its values. The species decides which arc of
+  // the colour wheel those values land on, so a cherry cannot come out green.
+  { key: 'hue',     bit: 4,  bits: 6, label: 'hue',
+    decode: (v, t) => {
+      const arc = SPECIES[t.species].hueArc;
+      return Math.round(mod360(arc[0] + (v / 63) * arc[1]));
+    },
+    format: v => v + '°' },
+
+  { key: 'mood',    bit: 10, bits: 2, label: 'palette',
+    decode: v => ['vivid', 'soft', 'deep', 'pastel'][v],
+    format: v => v },
+
+  { key: 'petals',  bit: 12, bits: 2, label: 'petal count',
+    decode: v => v,
+    format: (v, t) => String((SPECIES[t.species].petals || [5, 8, 13, 21])[v]) },
+
+  { key: 'layers',  bit: 14, bits: 2, label: 'petal layers',
+    decode: v => [1, 2, 2, 3][v],
+    format: v => String(v) },
+
+  { key: 'width',   bit: 16, bits: 3, label: 'petal width',
+    decode: v => 0.30 + (v / 7) * 0.58,
+    format: v => Math.round(v * 100) + '%' },
+
+  { key: 'tip',     bit: 19, bits: 3, label: 'petal tip',
+    decode: v => v / 7,
+    format: v => Math.round(v * 100) + '%' },
+
+  { key: 'curl',    bit: 22, bits: 3, label: 'stem curl',
+    decode: v => ((v / 7) * 2 - 1) * 0.055,
+    format: v => (v > 0 ? '+' : '') + Math.round((v / 0.055) * 100) + '%' },
+
+  { key: 'leaves',  bit: 25, bits: 2, label: 'leaves',
+    decode: v => [2, 3, 4, 5][v],
+    format: v => String(v) },
+
+  { key: 'core',    bit: 27, bits: 2, label: 'core density',
+    decode: v => [48, 108, 176, 252][v],
+    format: v => v + ' seeds' },
+
+  // Resolves to the absolute hue of the seed head. The daisy rotates its core
+  // away from its petals; the others pin theirs to a botanical colour.
+  { key: 'coreHue', bit: 29, bits: 2, label: 'core tint',
+    decode: (v, t) => {
+      const sp = SPECIES[t.species];
+      const value = sp.coreHues[v];
+      return sp.coreMode === 'absolute' ? value : mod360(t.hue + value);
+    },
+    format: v => v + '°' },
+
+  { key: 'notch',   bit: 31, bits: 1, label: 'petal notch',
+    decode: v => v === 1,
+    format: v => (v ? 'notched' : 'round') }
+];
+
+function readGene(genome, gene) {
+  return (genome >>> gene.bit) & ((1 << gene.bits) - 1);
+}
+
+function decode(genome) {
+  const traits = {};
+  for (const g of GENES) traits[g.key] = g.decode(readGene(genome, g), traits);
+  const table = SPECIES[traits.species].petals || [5, 8, 13, 21];
+  traits.petalCount = table[traits.petals];
+  return traits;
+}
+
+function flipBit(genome, bit) {
+  return (genome ^ (1 << bit)) >>> 0;
+}
+
+// Uniform crossover: each gene is taken whole from one parent or the other,
+// so a child never inherits half a petal count.
+function crossover(genomeA, genomeB, rng) {
+  let child = 0;
+  for (const g of GENES) {
+    const mask = (((1 << g.bits) - 1) << g.bit) >>> 0;
+    child = (child | ((rng() < 0.5 ? genomeA : genomeB) & mask)) >>> 0;
+  }
+  return child >>> 0;
+}
+
+function toBinary(genome) {
+  return (genome >>> 0).toString(2).padStart(32, '0');
+}
+
+
+// A bracketed L-system with a turtle, following Lindenmayer and Prusinkiewicz,
+// "The Algorithmic Beauty of Plants", chapters 1 and 2.
+//
+//   F  draw a segment forward        [  push turtle state
+//   +  turn left                     ]  pop turtle state
+//   -  turn right                    A  place a bloom here
+//   &  begin a hanging raceme        R  raceme segment, carries a small bloom
+
+function expand(axiom, rules, depth) {
+  let s = axiom;
+  for (let i = 0; i < depth; i++) {
+    let out = '';
+    for (const ch of s) out += rules[ch] !== undefined ? rules[ch] : ch;
+    s = out;
+  }
+  return s;
+}
+
+// Tropism: bend the heading toward a fixed direction by a fraction of the angle
+// between them. Wisteria racemes hang because gravity is their tropism vector.
+function bendToward(angle, target, amount) {
+  let d = target - angle;
+  while (d > Math.PI) d -= 2 * Math.PI;
+  while (d < -Math.PI) d += 2 * Math.PI;
+  return angle + d * amount;
+}
+
+const DOWN = Math.PI / 2; // canvas y grows downward
+
+function turtle(word, opts) {
+  const baseLen = opts.len;
+  const turn = opts.angle;
+  const curl = opts.curl;
+  const decay = opts.decay;
+  const taper = opts.taper;
+  const droop = opts.droop;
+
+  const segments = [];
+  const blooms = [];
+  const stack = [];
+
+  let st = {
+    x: 0, y: 0,
+    angle: -Math.PI / 2,   // -90 degrees points up
+    len: baseLen,
+    width: opts.width,
+    depth: 0,
+    curl: curl,
+    droop: 0,
+    chain: 0,
+    chainScale: 1,
+    t: 0
+  };
+
+  const step = (isRaceme) => {
+    if (st.droop > 0) st.angle = bendToward(st.angle, DOWN, st.droop);
+    else st.angle += st.curl;
+    const nx = st.x + Math.cos(st.angle) * st.len;
+    const ny = st.y + Math.sin(st.angle) * st.len;
+    const dt = st.len / baseLen;
+    segments.push({
+      x1: st.x, y1: st.y, x2: nx, y2: ny,
+      width: st.width, depth: st.depth,
+      raceme: isRaceme,
+      t0: st.t, t1: st.t + dt
+    });
+    st.x = nx; st.y = ny; st.t += dt;
+  };
+
+  for (const ch of word) {
+    if (ch === 'F') {
+      step(false);
+    } else if (ch === 'R') {
+      step(true);
+      // Flowers sit on alternating sides of the raceme, as they do on a real one.
+      const side = st.chain % 2 === 0 ? 1 : -1;
+      const off = st.len * 0.42 * side;
+      blooms.push({
+        x: st.x + Math.cos(st.angle + Math.PI / 2) * off,
+        y: st.y + Math.sin(st.angle + Math.PI / 2) * off,
+        angle: st.angle,
+        scale: st.chainScale,
+        depth: st.depth,
+        t: st.t
+      });
+      st.chain += 1;
+      st.chainScale *= 0.955;
+      st.len *= 0.975;
+    } else if (ch === '+') {
+      st.angle -= turn;
+      // A branch that has just turned keeps curling the way it turned, so side
+      // shoots arc outward instead of crossing back over the trunk.
+      st.curl = -Math.abs(curl) - 0.018;
+    } else if (ch === '-') {
+      st.angle += turn;
+      st.curl = Math.abs(curl) + 0.018;
+    } else if (ch === '&') {
+      st.droop = droop;
+      st.len = baseLen * 0.30;
+      st.width = Math.max(1.2, st.width * 0.34);
+      st.chain = 0;
+      st.chainScale = 1;
+    } else if (ch === '[') {
+      stack.push(Object.assign({}, st));
+      st.depth += 1;
+      st.len *= decay;
+      st.width *= taper;
+    } else if (ch === ']') {
+      st = stack.pop();
+    } else if (ch === 'A') {
+      blooms.push({
+        x: st.x, y: st.y,
+        angle: st.angle,
+        scale: Math.pow(0.82, st.depth),
+        depth: st.depth,
+        t: st.t
+      });
+    }
+  }
+
+  let span = 0;
+  for (const s of segments) span = Math.max(span, s.t1);
+  for (const b of blooms) span = Math.max(span, b.t);
+  if (span > 0) {
+    for (const s of segments) { s.t0 /= span; s.t1 /= span; }
+    for (const b of blooms) b.t /= span;
+  }
+
+  return { segments, blooms };
+}
+
+
+
+const BLOOM_RADIUS = 118;
+
+function buildPlant(traits, genome) {
+  const sp = SPECIES[traits.species];
+  const form = sp.forms[traits.form];
+
+  // One pass per recursion level, then a terminal pass that turns each raceme
+  // marker W into a chain of gravity-bent segments.
+  let word = form.rule ? expand(form.axiom, { A: form.rule }, form.depth) : form.axiom;
+  if (word.indexOf('W') !== -1) {
+    word = expand(word, { W: 'FF&' + 'R'.repeat(form.chain), A: '' }, 1);
+  }
+
+  const { segments, blooms } = turtle(word, {
+    len: sp.len,
+    width: sp.width,
+    angle: sp.angle,
+    decay: sp.decay,
+    taper: sp.taper,
+    droop: sp.droop,
+    curl: traits.curl
+  });
+
+  // Blooms on a branched plant are smaller, the way a spray is smaller than a
+  // single head. Without this the blooms collide at the same radius.
+  for (const b of blooms) b.scale *= form.bloom;
+
+  const rng = mulberry32((genome ^ 0x5bf03635) >>> 0);
+  const eligible = segments.filter(s => !s.raceme && s.depth <= sp.leafDepth);
+  const leaves = [];
+  const count = Math.min(eligible.length, Math.max(1, Math.round(traits.leaves * sp.leafMult)));
+
+  for (let i = 0; i < count; i++) {
+    const s = eligible[Math.min(eligible.length - 1, Math.floor(((i + 0.55) / count) * eligible.length))];
+    const f = 0.22 + rng() * 0.5;
+    const dir = Math.atan2(s.y2 - s.y1, s.x2 - s.x1);
+    const side = i % 2 === 0 ? -1 : 1;
+    leaves.push({
+      x: s.x1 + (s.x2 - s.x1) * f,
+      y: s.y1 + (s.y2 - s.y1) * f,
+      angle: dir + side * (0.80 + rng() * 0.35),
+      len: (50 + rng() * 28) * sp.leafScale * Math.pow(0.7, s.depth),
+      side,
+      t: s.t0 + (s.t1 - s.t0) * f
+    });
+  }
+
+  const box = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+  const fit = (x, y, pad) => {
+    if (x - pad < box.minX) box.minX = x - pad;
+    if (y - pad < box.minY) box.minY = y - pad;
+    if (x + pad > box.maxX) box.maxX = x + pad;
+    if (y + pad > box.maxY) box.maxY = y + pad;
+  };
+
+  for (const s of segments) { fit(s.x1, s.y1, s.width); fit(s.x2, s.y2, s.width); }
+  for (const b of blooms) fit(b.x, b.y, BLOOM_RADIUS * b.scale);
+  for (const l of leaves) {
+    fit(l.x, l.y, 4);
+    fit(l.x + Math.cos(l.angle) * l.len, l.y + Math.sin(l.angle) * l.len, l.len * 0.34);
+  }
+
+  return { segments, leaves, blooms, box, species: sp };
+}
+
+
+
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5)); // 137.5 degrees
+
+const MOOD = {
+  vivid:  { sat: 76, light: 57 },
+  soft:   { sat: 50, light: 68 },
+  deep:   { sat: 62, light: 44 },
+  pastel: { sat: 44, light: 78 }
+};
+
+const clamp01 = t => (t < 0 ? 0 : t > 1 ? 1 : t);
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const backOut = t => { const c = 1.55; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+
+function petalPath(ctx, r, halfWidth, tip, notch) {
+  const cx1 = r * 0.18;
+  const cx2 = r * (0.48 + 0.34 * (1 - tip));
+  const ty = halfWidth * (1 - tip * 0.72);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  if (notch) {
+    ctx.bezierCurveTo(cx1, -halfWidth, cx2, -ty, r * 0.99, -halfWidth * 0.26);
+    ctx.quadraticCurveTo(r * 0.76, 0, r * 0.99, halfWidth * 0.26);
+    ctx.bezierCurveTo(cx2, ty, cx1, halfWidth, 0, 0);
+  } else {
+    ctx.bezierCurveTo(cx1, -halfWidth, cx2, -ty, r, 0);
+    ctx.bezierCurveTo(cx2, ty, cx1, halfWidth, 0, 0);
+  }
+  ctx.closePath();
+}
+
+function render(ctx, width, height, plant, traits, progress, phase) {
+  const sp = plant.species;
+  const box = plant.box;
+  const boxW = box.maxX - box.minX;
+  const boxH = box.maxY - box.minY;
+  const scale = Math.min((width * 0.92) / boxW, (height * 0.94) / boxH);
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.save();
+  ctx.translate(width / 2, height / 2);
+  ctx.scale(scale, scale);
+  ctx.translate(-(box.minX + box.maxX) / 2, -(box.minY + box.maxY) / 2);
+
+  const swayAmp = 8;
+  const sway = (x, y) => {
+    const above = clamp01((box.maxY - y) / boxH);
+    return x + Math.sin(phase + y * 0.010) * swayAmp * Math.pow(above, 1.7);
+  };
+
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const stemP = clamp01(progress / 0.52);
+  ctx.strokeStyle = sp.stem;
+  for (const s of plant.segments) {
+    const f = clamp01((stemP - s.t0) / Math.max(1e-6, s.t1 - s.t0));
+    if (f <= 0) continue;
+    const ex = s.x1 + (s.x2 - s.x1) * f;
+    const ey = s.y1 + (s.y2 - s.y1) * f;
+    ctx.lineWidth = s.width;
+    ctx.beginPath();
+    ctx.moveTo(sway(s.x1, s.y1), s.y1);
+    ctx.lineTo(sway(ex, ey), ey);
+    ctx.stroke();
+  }
+
+  for (const leaf of plant.leaves) {
+    const start = 0.10 + leaf.t * 0.42;
+    const open = easeOut(clamp01((progress - start) / 0.18));
+    if (open <= 0) continue;
+    const len = leaf.len * open;
+    ctx.save();
+    ctx.translate(sway(leaf.x, leaf.y), leaf.y);
+    ctx.rotate(leaf.angle + Math.sin(phase * 1.3 + leaf.y * 0.02) * 0.05);
+    ctx.fillStyle = 'hsl(' + sp.leafHue + ', 36%, ' + (38 + leaf.side * 4) + '%)';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(len * 0.45, -len * 0.30, len, 0);
+    ctx.quadraticCurveTo(len * 0.45, len * 0.30, 0, 0);
+    ctx.fill();
+    ctx.strokeStyle = 'hsl(' + sp.leafHue + ', 40%, 26%)';
+    ctx.lineWidth = Math.max(0.6, len * 0.022);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(len * 0.94, 0);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // A species may insist its blooms stay round. A 12px cherry blossom drawn with
+  // the narrowest petal gene reads as a spike, not a flower.
+  const petalWidth = Math.max(sp.widthFloor, traits.width);
+  const petalTip = Math.min(sp.tipCap, traits.tip);
+
+  const mood = MOOD[traits.mood];
+  const ordered = plant.blooms.slice().sort((a, b) => b.depth - a.depth);
+
+  for (const bloom of ordered) {
+    const start = 0.40 + bloom.t * 0.22;
+    const bp = clamp01((progress - start) / 0.50);
+    if (bp <= 0) continue;
+
+    const bx = sway(bloom.x, bloom.y);
+    const by = bloom.y;
+    const radius = BLOOM_RADIUS * bloom.scale;
+    const tilt = (bx - bloom.x) * 0.004;
+
+    // A bloom only a few pixels wide cannot show three layers or a seed head, so
+    // small ones drop detail. This keeps a 27-bloom cherry spray at 60fps.
+    const layers = radius < 26 ? 1 : traits.layers;
+
+    for (let layer = layers - 1; layer >= 0; layer--) {
+      const lp = clamp01((bp - layer * 0.10) / 0.72);
+      if (lp <= 0) continue;
+      const r = radius * (1 - 0.24 * layer) * backOut(lp);
+      const halfWidth = (r * petalWidth) / 2;
+      const hue = (traits.hue + layer * 15) % 360;
+      ctx.fillStyle = 'hsl(' + hue + ', ' + mood.sat + '%, ' + (mood.light - layer * 7) + '%)';
+      ctx.strokeStyle = 'hsl(' + hue + ', ' + (mood.sat - 12) + '%, ' + Math.max(16, mood.light - 26) + '%)';
+      ctx.lineWidth = Math.max(0.6, r * 0.012);
+      for (let i = 0; i < traits.petalCount; i++) {
+        ctx.save();
+        ctx.translate(bx, by);
+        ctx.rotate(tilt + (i * 2 * Math.PI) / traits.petalCount + layer * GOLDEN_ANGLE);
+        petalPath(ctx, r, halfWidth, petalTip, traits.notch);
+        ctx.fill();
+        if (r > 8) ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    const coreHue = traits.coreHue;
+    const coreR = radius * sp.coreRatio;
+
+    if (coreR < 7) {
+      // A stamen dot is a highlight, not a seed head, so it stays bright.
+      ctx.fillStyle = 'hsl(' + coreHue + ', ' + Math.min(85, mood.sat + 20) + '%, 52%)';
+      ctx.beginPath();
+      ctx.arc(bx, by, Math.max(1, coreR) * clamp01(bp / 0.55), 0, Math.PI * 2);
+      ctx.fill();
+      continue;
+    }
+
+    // Phyllotaxis: seed i sits at angle i * 137.5 degrees, radius c * sqrt(i).
+    const total = traits.core;
+    const shown = Math.floor(total * clamp01(bp / 0.55));
+    const c = coreR / Math.sqrt(Math.max(1, total));
+    const dot = Math.max(1.0, c * 0.62);
+    for (let i = 0; i < shown; i++) {
+      const a = i * GOLDEN_ANGLE;
+      const rr = c * Math.sqrt(i);
+      ctx.fillStyle = 'hsl(' + coreHue + ', ' + (mood.sat - 8) + '%, ' + (26 + (i % 6) * 3.4) + '%)';
+      ctx.beginPath();
+      ctx.arc(bx + rr * Math.cos(a), by + rr * Math.sin(a), dot, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+
+
+const PAGE = 48;
+const CELL_W = 150;
+const CELL_H = 150;
+
+let start = Number(new URLSearchParams(location.search).get('from') || 1);
+if (!isFinite(start) || start < 0) start = 1;
+
+function paint() {
+  const box = document.getElementById('garden');
+  box.textContent = '';
+  document.getElementById('range').textContent = 'seeds ' + start + ' to ' + (start + PAGE - 1);
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  for (let i = 0; i < PAGE; i++) {
+    const seed = (start + i) >>> 0;
+    const genome = toGenome(seed);
+    const traits = decode(genome);
+    const plant = buildPlant(traits, genome);
+
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'cell';
+
+    const canvas = document.createElement('canvas');
+    canvas.width = CELL_W * dpr;
+    canvas.height = CELL_H * dpr;
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    render(ctx, CELL_W, CELL_H, plant, traits, 1, 0);
+
+    const label = document.createElement('span');
+    label.className = 'seed';
+    label.textContent = String(seed);
+
+    cell.append(canvas, label);
+    cell.addEventListener('click', function () {
+      location.href = 'index.html?seed=' + seed;
+    });
+    box.appendChild(cell);
+  }
+
+  const url = new URL(location.href);
+  url.searchParams.set('from', String(start));
+  history.replaceState(null, '', url);
+}
+
+document.getElementById('next').addEventListener('click', function () {
+  start += PAGE;
+  paint();
+});
+document.getElementById('prev').addEventListener('click', function () {
+  start = Math.max(0, start - PAGE);
+  paint();
+});
+
+try {
+  const saved = localStorage.getItem('flower-theme');
+  if (saved === 'dark' || saved === 'light') document.documentElement.dataset.theme = saved;
+} catch (e) {}
+
+paint();
+
+</script>
+</body>
+</html>
