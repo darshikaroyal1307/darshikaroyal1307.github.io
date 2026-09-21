@@ -3,7 +3,7 @@
 Every plant on this site is one 32-bit number. Type a seed, and it grows.
 There are no flower images anywhere in the repository.
 
-**Live:** https://YOUR-USERNAME.github.io/flower-dna/
+**Live:** https://kittyxo12.github.io/flower-dna/
 
 Once it is live, try `?seed=1` for a sunflower, `?seed=5` for cherry blossom and
 `?seed=2` for wisteria, then open `garden.html` to see forty-eight seeds at once.
